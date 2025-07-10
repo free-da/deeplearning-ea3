@@ -6,8 +6,9 @@ export function buildVocab(tokenGroups) {
         });
     });
 
-    const wordToId = {};
-    let id = 1;
+    const wordToId = { '<PAD>': 0, '<UNK>': 1 };
+    let id = 2;
+
     for (let word of [...wordSet].sort()) {
         wordToId[word] = id++;
     }

@@ -1,4 +1,3 @@
-
 import { tokensToSequences, padSequences } from './tokenizer.js';
 import { prepareLanguageModelData } from './lm-preprocessing.js';
 import { createLanguageModel } from './model.js';
@@ -7,7 +6,7 @@ import { createLanguageModel } from './model.js';
  * Trainiert ein Sprachmodell (Next Word Prediction)
  *
  * @param {Array[]} tokenGroups - Array von Sätzen mit Tokens
- * @param {Object} vocab - Token->ID-Vokabular
+ * @param {Object} vocab - Token->ID-Vokabular (sollte <PAD>=0, <UNK>=1 enthalten)
  * @param {number} maxLen - Maximale Eingabesequenzlänge
  * @param {number} embeddingDim - Dimension der Embeddings
  * @param {number} lstmUnits - Anzahl LSTM-Einheiten
@@ -26,22 +25,28 @@ export async function trainLanguageModel({
                                          }) {
     console.log("📦 Training mit Parametern:", { maxLen, embeddingDim, lstmUnits, epochs, batchSize });
 
-    // Schritt 1: In Sequenzen umwandeln
+    // Schritt 1: Token-Gruppen in Integer-Sequenzen übersetzen
     const tokenIds = tokensToSequences(tokenGroups, vocab);
+    console.log("Beispiel tokenIds:", tokenIds.slice(0, 3));
 
     // Schritt 2: Trainingsdaten (X/y) erzeugen
     const { X, y } = prepareLanguageModelData(tokenIds, Object.keys(vocab).length);
+    console.log("Beispiel X (Sequenzen vor Padding):", X.slice(0, 3));
+    console.log("Beispiel y (Ziel-Token):", y.slice(0, 10));
 
-    // Schritt 3: Padding & Tensoren erstellen
-    const X_padded = tf.tensor2d(padSequences(X, maxLen));
+    // Schritt 3: Padding (auf maxLen) mit Padding-Wert 0 (<PAD>)
+    const X_padded_arr = padSequences(X, maxLen, 0);
+    console.log("Beispiel X (Sequenzen nach Padding):", X_padded_arr.slice(0, 3));
+
+    // Tensoren erstellen (tf.tensor2d braucht Zahlenarrays und korrekte Form)
+    const X_padded = tf.tensor2d(X_padded_arr, [X_padded_arr.length, maxLen], 'int32');
     const yTensor = tf.tensor1d(y, 'int32');
 
-    // Schritt 4: Modell erstellen mit übergebenen Parametern
+    // Schritt 4: Modell erstellen
     const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
     model.summary();
 
-    console.log("X_padded shape:", X_padded.shape); // sollte [n, maxLen] sein
-    console.log("maxLen erwartet:", maxLen);
+    console.log("X_padded shape:", X_padded.shape); // [Anzahl Samples, maxLen]
 
     // Schritt 5: Modell trainieren
     await model.fit(X_padded, yTensor, {

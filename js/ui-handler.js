@@ -68,7 +68,8 @@ export class UIHandler {
     }
 
     async triggerPrediction() {
-        const predictions = await this.predictor.predictNextWord(this.currentText.trim());
+        const topWords = this.predictor.predict(this.currentText.trim(), 5); // Top-5
+        const predictions = topWords.map(p => p.word); // Nur Wörter extrahieren
         this.renderPredictions(predictions);
     }
 
