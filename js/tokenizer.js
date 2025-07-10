@@ -1,24 +1,27 @@
-export function buildVocab(tokenGroups) {
-    const wordSet = new Set();
-    tokenGroups.forEach(sentence => {
-        sentence.forEach(token => {
-            wordSet.add(token.toLowerCase());
-        });
+
+//Vokabular wird auf 5000 verkürzt
+export function buildVocab(tokenGroups, maxVocabSize = 5000) {
+    const wordFreq = {};
+    tokenGroups.flat().forEach(token => {
+        const word = token.toLowerCase();
+        wordFreq[word] = (wordFreq[word] || 0) + 1;
     });
 
-    const wordToId = { '<PAD>': 0, '<UNK>': 1 };
-    let id = 2;
+    const sortedWords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, maxVocabSize - 2) // Platz für <PAD> und <UNK>
 
-    for (let word of [...wordSet].sort()) {
-        wordToId[word] = id++;
-    }
+    const wordToId = { '<PAD>': 0, '<UNK>': 1 };
+    sortedWords.forEach(([word], idx) => {
+        wordToId[word] = idx + 2;
+    });
 
     return wordToId;
 }
 
 export function tokensToSequences(tokenGroups, wordToId) {
     return tokenGroups.map(sentence =>
-        sentence.map(token => wordToId[token.toLowerCase()] ?? 0)
+        sentence.map(token => wordToId[token.toLowerCase()] ?? wordToId['<UNK>'])
     );
 }
 

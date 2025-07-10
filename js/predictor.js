@@ -15,6 +15,16 @@ export class Predictor {
         this.maxLen = maxLen;
     }
 
+    setModel(model, vocab, maxLen) {
+        this.model = model;
+        this.vocab = vocab;
+        this.id2word = Object.entries(vocab).reduce((obj, [word, id]) => {
+            obj[id] = word;
+            return obj;
+        }, {});
+        this.maxLen = maxLen;
+    }
+
     predict(inputText, topK = 5) {
         const tokens = tokenizeText(inputText);
         const tokenIds = tokens.map(t => this.vocab[t] ?? this.vocab['<UNK>']); // Fallback

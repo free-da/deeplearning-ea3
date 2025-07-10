@@ -30,16 +30,8 @@ export async function trainLanguageModel({
     console.log("Beispiel tokenIds:", tokenIds.slice(0, 3));
 
     // Schritt 2: Trainingsdaten (X/y) erzeugen
-    const { X, y } = prepareLanguageModelData(tokenIds, Object.keys(vocab).length);
-    console.log("Beispiel X (Sequenzen vor Padding):", X.slice(0, 3));
-    console.log("Beispiel y (Ziel-Token):", y.slice(0, 10));
-
-    // Schritt 3: Padding (auf maxLen) mit Padding-Wert 0 (<PAD>)
-    const X_padded_arr = padSequences(X, maxLen, 0);
-    console.log("Beispiel X (Sequenzen nach Padding):", X_padded_arr.slice(0, 3));
-
-    // Tensoren erstellen (tf.tensor2d braucht Zahlenarrays und korrekte Form)
-    const X_padded = tf.tensor2d(X_padded_arr, [X_padded_arr.length, maxLen], 'int32');
+    const { X, y } = prepareLanguageModelData(tokenIds, maxLen);
+    const X_padded = tf.tensor2d(X);
     const yTensor = tf.tensor1d(y, 'int32');
 
     // Schritt 4: Modell erstellen
