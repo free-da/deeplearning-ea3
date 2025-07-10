@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Learning EA2: Regression mit FFNN</title>
+
+    <!-- Foundation CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/css/foundation.min.css">
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .button-group .button {
+            margin-bottom: 0;
+            margin-top: 25px;
+        }
+        h2 {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="grid-container">
+    <h1>Deep Learning EA3: Language Model mit LSTM</h1>
+    <div class="grid-x grid-padding-x">
+        <!-- Eingabe -->
+        <div class="medium-12 cell">
+            <label>Gib deinen Text ein:
+                <input type="text" id="user-input" placeholder="z.B. Das Wetter ist">
+            </label>
+        </div>
+
+        <!-- Button-Gruppe für Aktionen -->
+        <div class="medium-12 cell button-group">
+            <button class="button primary" id="predict-btn">Vorhersage</button>
+            <button class="button success" id="weiter-btn">Weiter</button>
+            <button class="button warning" id="auto-btn">Auto</button>
+            <button class="button alert" id="stop-btn">Stopp</button>
+            <button class="button secondary" id="reset-btn">Reset</button>
+        </div>
+
+        <!-- Aktueller Text -->
+        <div class="medium-12 cell">
+            <h4>Aktueller Text:</h4>
+            <div id="current-text" class="callout secondary">[Noch kein Text]</div>
+        </div>
+
+        <!-- Wahrscheinlichkeitsanzeige -->
+        <div class="medium-12 cell">
+            <h4>Nächste Wortvorhersagen:</h4>
+            <div id="predictions" class="grid-x grid-padding-x"></div>
+        </div>
+    </div>
+
+    <div class="row column">
+        <hr>
+        <ul class="menu"><li class="float-right">© F. Buchner 2025</li></ul>
+    </div>
+    <hr>
+</div>
+
+<!-- Foundation JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/js/foundation.min.js"></script>
+<script>
+    $(document).foundation();
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
