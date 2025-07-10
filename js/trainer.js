@@ -30,7 +30,7 @@ export async function trainLanguageModel({
     console.log("Beispiel tokenIds:", tokenIds.slice(0, 3));
 
     // Schritt 2: Trainingsdaten (X/y) erzeugen
-    const { X, y } = prepareLanguageModelData(tokenIds, maxLen);
+    const { X, y } = prepareLanguageModelData(tokenIds, maxLen, vocab);
     const X_padded = tf.tensor2d(X);
     const yTensor = tf.tensor1d(y, 'int32');
 

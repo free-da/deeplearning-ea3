@@ -70,6 +70,10 @@ export class UIHandler {
     async triggerPrediction() {
         const topWords = this.predictor.predict(this.currentText.trim(), 5); // Top-5
         const predictions = topWords.map(p => p.word); // Nur Wörter extrahieren
+
+        console.log(this.predictor.predict("The cell produces", 5));
+        console.log(this.predictor.predict("The metabolism is", 5));
+
         this.renderPredictions(predictions);
     }
 

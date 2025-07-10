@@ -42,6 +42,9 @@ export class Predictor {
                 word: this.id2word[id] || '[UNK]',
                 prob,
             }));
+        console.log("Input tokens:", tokens);
+        console.log("Token IDs:", tokenIds);
+        console.log("Top IDs:", sorted.map(p => p.word));
 
         tf.dispose([input, prediction]);
         return sorted;

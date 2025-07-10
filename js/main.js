@@ -28,7 +28,10 @@ async function main() {
 
     // Vokabular aufbauen
     const vocab = buildVocab(tokenGroups);
-    console.log("Vokabular-Größe:", Object.keys(vocab).length);
+    const unkCount = Object.entries(vocab).filter(([word, id]) => id === vocab["<UNK>"]).length;
+    console.log("Vokabulargröße:", Object.keys(vocab).length);
+    console.log("UNK-Zuweisungen im Vokabular:", unkCount);
+
 
     // ⏬ Versuche, ein bereits trainiertes Modell zu laden
     let model;
