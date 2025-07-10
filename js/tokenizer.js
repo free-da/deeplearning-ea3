@@ -31,3 +31,10 @@ export function padSequences(sequences, maxLen, paddingValue = 0) {
         }
     });
 }
+export function tokenizeText(text) {
+    return text
+        .toLowerCase()
+        .replace(/[.,!?;:()\[\]{}"']/g, '')  // Satzzeichen entfernen
+        .split(/\s+/)                        // Bei Leerzeichen trennen
+        .filter(t => t.length > 0);          // Leere Tokens filtern
+}

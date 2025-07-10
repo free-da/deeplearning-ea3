@@ -1,0 +1,39 @@
+
+/**
+ * Erzeugt das Sprachmodell (LSTM) für Next Word Prediction
+ *
+ * @param {number} vocabSize - Größe des Vokabulars
+ * @param {number} maxLen - Maximale Eingabesequenzlänge
+ * @param {number} embeddingDim - Dimension der Embeddings
+ * @param {number} lstmUnits - Anzahl der LSTM-Einheiten
+ * @returns {tf.LayersModel} Das erstellte Modell
+ */
+export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) {
+    const model = tf.sequential();
+
+    model.add(tf.layers.embedding({
+        inputDim: vocabSize,
+        outputDim: embeddingDim,
+        inputLength: maxLen,
+    }));
+
+    model.add(tf.layers.lstm({
+        units: lstmUnits,
+        returnSequences: false,
+        kernelInitializer: 'glorotUniform',
+        recurrentInitializer: 'glorotUniform',
+    }));
+
+    model.add(tf.layers.dense({
+        units: vocabSize,
+        activation: 'softmax',
+    }));
+
+    model.compile({
+        optimizer: 'adam',
+        loss: 'sparseCategoricalCrossentropy',
+        metrics: ['accuracy'],
+    });
+
+    return model;
+}

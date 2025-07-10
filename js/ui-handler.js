@@ -7,35 +7,35 @@ export class UIHandler {
     }
 
     init() {
-        document.getElementById("predict-btn").addEventListener("click", () => {
+        document.getElementById("predict-btn").addEventListener("click", async () => {
             const input = document.getElementById("user-input").value.trim();
             if (input) {
                 this.currentText = input;
                 this.updateCurrentText();
-                this.triggerPrediction();
+                await this.triggerPrediction();
             }
         });
 
-        document.getElementById("weiter-btn").addEventListener("click", () => {
-            const predictions = this.predictor.predict(this.currentText.trim());
+        document.getElementById("weiter-btn").addEventListener("click", async () => {
+            const predictions = await this.predictor.predictNextWord(this.currentText.trim());
             if (predictions.length > 0) {
-                this.appendWord(predictions[0].word);
-                this.triggerPrediction();
+                this.appendWord(predictions[0]);
+                await this.triggerPrediction();
             }
         });
 
         document.getElementById("auto-btn").addEventListener("click", () => {
             let count = 0;
             this.autoGenerate = true;
-            this.autoInterval = setInterval(() => {
+            this.autoInterval = setInterval(async () => {
                 if (!this.autoGenerate || count >= 10) {
                     clearInterval(this.autoInterval);
                     return;
                 }
-                const predictions = this.predictor.predict(this.currentText.trim());
+                const predictions = await this.predictor.predictNextWord(this.currentText.trim());
                 if (predictions.length > 0) {
-                    this.appendWord(predictions[0].word);
-                    this.triggerPrediction();
+                    this.appendWord(predictions[0]);
+                    await this.triggerPrediction();
                 }
                 count++;
             }, 1000);
@@ -67,21 +67,22 @@ export class UIHandler {
         this.updateCurrentText();
     }
 
-    triggerPrediction() {
-        const predictions = this.predictor.predict(this.currentText.trim());
+    async triggerPrediction() {
+        const predictions = await this.predictor.predictNextWord(this.currentText.trim());
         this.renderPredictions(predictions);
     }
 
-    renderPredictions(predictions) {
+    renderPredictions(predictedWords) {
         const container = document.getElementById("predictions");
         container.innerHTML = "";
-        predictions.forEach(p => {
+
+        predictedWords.forEach(word => {
             const btn = document.createElement("button");
             btn.className = "button tiny";
-            btn.innerText = `${p.word} (${(p.prob * 100).toFixed(1)}%)`;
-            btn.onclick = () => {
-                this.appendWord(p.word);
-                this.triggerPrediction();
+            btn.innerText = word;
+            btn.onclick = async () => {
+                this.appendWord(word);
+                await this.triggerPrediction();
             };
             container.appendChild(btn);
         });
