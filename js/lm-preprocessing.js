@@ -1,4 +1,4 @@
-function prepareLanguageModelData(sequences, vocabSize) {
+export function prepareLanguageModelData(sequences, vocabSize) {
     const X = [];
     const y = [];
 
