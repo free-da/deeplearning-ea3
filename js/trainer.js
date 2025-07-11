@@ -48,6 +48,12 @@ export async function trainLanguageModel({
         callbacks: {
             onEpochEnd: (epoch, logs) =>
                 console.log(`📈 Epoch ${epoch + 1}: Loss = ${logs.loss.toFixed(4)}`),
+            onBatchEnd: async (batch, logs) => {
+                if (batch % 50 === 0) {
+                    console.log(`   Batch ${batch}: Loss = ${logs.loss.toFixed(4)}`);
+                    await tf.nextFrame();  // Browser nicht blockieren
+                }
+            }
         },
     });
 

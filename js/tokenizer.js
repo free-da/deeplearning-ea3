@@ -29,12 +29,13 @@ export function tokensToSequences(tokenGroups, wordToId) {
 export function padSequences(sequences, maxLen, paddingValue = 0) {
     return sequences.map(seq => {
         if (seq.length > maxLen) {
-            return seq.slice(0, maxLen);
+            return seq.slice(-maxLen); // nur das letzte maxLen behalten
         } else {
-            return [...seq, ...Array(maxLen - seq.length).fill(paddingValue)];
+            return [...Array(maxLen - seq.length).fill(paddingValue), ...seq]; // vorne auffüllen
         }
     });
 }
+
 export function tokenizeText(text) {
     return text
         .toLowerCase()

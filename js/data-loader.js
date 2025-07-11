@@ -2,6 +2,7 @@ export class DataLoader {
     constructor() {
         this.trainPath = "data/train.csv";
         this.devPath = "data/dev.csv";
+        this.devPath = "data/dev.csv";
         this.testPath = "data/test.csv";
     }
 

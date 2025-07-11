@@ -17,6 +17,15 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
         inputLength: maxLen,
     }));
 
+    // Erste LSTM-Schicht: gibt Sequenzen weiter
+    model.add(tf.layers.lstm({
+        units: lstmUnits,
+        returnSequences: true,
+        kernelInitializer: 'glorotUniform',
+        recurrentInitializer: 'glorotUniform',
+    }));
+
+    // Zweite LSTM-Schicht: gibt Vektor aus
     model.add(tf.layers.lstm({
         units: lstmUnits,
         returnSequences: false,

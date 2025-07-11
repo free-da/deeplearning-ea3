@@ -31,7 +31,10 @@ export class Predictor {
         const padded = padSequences([tokenIds], this.maxLen); // [1, maxLen]
 
         const input = tf.tensor2d(padded);
+        console.log("Padded input shape:", padded[0].length);
+        console.log("Padded tokens:", padded[0].map(id => this.id2word[id]));
         const prediction = this.model.predict(input);
+        prediction.print();
         const probs = prediction.dataSync();
 
         // Top-K Wahrscheinlichkeiten
