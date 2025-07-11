@@ -14,6 +14,7 @@ import { createLanguageModel } from './model.js';
  * @param {number} batchSize - Größe eines Batches
  * @returns {tf.LayersModel} Das trainierte Modell
  */
+
 export async function trainLanguageModel({
                                              tokenGroups,
                                              vocab,
@@ -27,12 +28,28 @@ export async function trainLanguageModel({
 
     // Schritt 1: Token-Gruppen in Integer-Sequenzen übersetzen
     const tokenIds = tokensToSequences(tokenGroups, vocab);
-    console.log("Beispiel tokenIds:", tokenIds.slice(0, 3));
 
     // Schritt 2: Trainingsdaten (X/y) erzeugen
     const { X, y } = prepareLanguageModelData(tokenIds, maxLen, vocab);
-    const X_padded = tf.tensor2d(X);
-    const yTensor = tf.tensor1d(y, 'int32');
+    // === Analyse-Logs zum Training ===
+    const UNK_ID = vocab['<UNK>'];
+    let totalUnks = 0;
+    let totalTokens = 0;
+
+    X.forEach(seq => {
+        totalUnks += seq.filter(id => id === UNK_ID).length;
+        totalTokens += seq.length;
+    });
+
+    const unkRatio = (totalUnks / totalTokens) * 100;
+    console.log(`📊 UNK-Anteil in Inputs: ${unkRatio.toFixed(2)} %`);
+
+    const uniqueTargets = new Set(y);
+    console.log(`📊 Anzahl einzigartiger Zielwörter: ${uniqueTargets.size} von ${Object.keys(vocab).length}`);
+    console.log(`📊 Gesamtzahl Trainingsbeispiele: ${X.length}`);
+
+    const X_padded = tf.tensor2d(X).slice(0, 50000);
+    const yTensor = tf.tensor1d(y, 'int32').slice(0, 50000);
 
     // Schritt 4: Modell erstellen
     const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
@@ -45,17 +62,24 @@ export async function trainLanguageModel({
         epochs,
         batchSize,
         shuffle: true,
-        callbacks: {
-            onEpochEnd: (epoch, logs) =>
-                console.log(`📈 Epoch ${epoch + 1}: Loss = ${logs.loss.toFixed(4)}`),
-            onBatchEnd: async (batch, logs) => {
-                if (batch % 50 === 0) {
-                    console.log(`   Batch ${batch}: Loss = ${logs.loss.toFixed(4)}`);
-                    await tf.nextFrame();  // Browser nicht blockieren
+        callbacks: [
+            {
+                onBatchEnd: async (batch, logs) => {
+                    if (batch % 250 === 0) {
+                        console.log(`🧮 Batch ${batch}: Loss = ${logs.loss.toFixed(4)}`);
+                    }
+                },
+                onEpochEnd: async (epoch, logs) => {
+                    console.log(`📈 Epoch ${epoch + 1}: Loss = ${logs.loss.toFixed(4)}`);
+                    if ((epoch + 1) % 2 === 0) {
+                        await model.save('indexeddb://checkpoint');
+                    }
                 }
             }
-        },
+        ]
     });
+    await tf.nextFrame(); // Lässt den Browser „atmen“, reduziert Sync-Probleme
+
 
     // Optional: Modell speichern
     await model.save('downloads://trained-lm');

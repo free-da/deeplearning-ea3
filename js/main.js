@@ -8,11 +8,12 @@ import { loadTrainedModel } from './loadModel.js';
 import { Predictor } from './predictor.js';
 
 async function main() {
+
     // 💡 Zentrale Parameterdefinition
-    const maxLen = 20;
+    const maxLen = 30;
     const embeddingDim = 64;
-    const lstmUnits = 100;
-    const epochs = 10;
+    const lstmUnits = 256;
+    const epochs = 5;
     const batchSize = 32;
 
     // Initialisiere Klassen
@@ -24,6 +25,7 @@ async function main() {
 
     // Gruppiere Tokens zu Sätzen
     const tokenGroups = groupTokensIntoSentences(trainData.map(d => d.token));
+    analyzeSentenceLengths(tokenGroups);
     console.log("Token-Gruppen (Sätze):", tokenGroups.slice(0, 3));
 
     // Vokabular aufbauen
@@ -31,7 +33,6 @@ async function main() {
     const unkCount = Object.entries(vocab).filter(([word, id]) => id === vocab["<UNK>"]).length;
     console.log("Vokabulargröße:", Object.keys(vocab).length);
     console.log("UNK-Zuweisungen im Vokabular:", unkCount);
-
 
     // ⏬ Versuche, ein bereits trainiertes Modell zu laden
     let model;
@@ -51,8 +52,8 @@ async function main() {
 
     // Training-Button
     document.getElementById('train-btn').addEventListener('click', async () => {
-        const subset = tokenGroups.slice(0, 10000);; // Trainingsdaten
-
+        const subset = tokenGroups; // Trainingsdaten
+        //.slice(0, 5000)
         // ⏬ Training starten mit konsistenten Parametern
         const trainedModel = await trainLanguageModel({
             tokenGroups: subset,
@@ -70,5 +71,22 @@ async function main() {
         console.log("✅ Modelltraining abgeschlossen. Du kannst jetzt Texteingaben machen.");
     });
 }
+
+function analyzeSentenceLengths(tokenGroups) {
+    const lengths = tokenGroups.map(s => s.length);
+    const avg = (lengths.reduce((a, b) => a + b, 0) / lengths.length).toFixed(2);
+    const median = lengths.sort((a, b) => a - b)[Math.floor(lengths.length / 2)];
+    const shortCount = lengths.filter(l => l < 10).length;
+    const longCount = lengths.filter(l => l > 50).length;
+    const max = Math.max(...lengths);
+
+    console.log("📏 Neue Satzlängen-Analyse:");
+    console.log(`➡️ Durchschnitt: ${avg} Tokens`);
+    console.log(`➡️ Median: ${median}`);
+    console.log(`➡️ Maximum: ${max}`);
+    console.log(`➡️ < 10 Tokens: ${shortCount} Sätze`);
+    console.log(`➡️ > 50 Tokens: ${longCount} Sätze`);
+}
+
 
 main();

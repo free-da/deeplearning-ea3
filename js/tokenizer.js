@@ -1,6 +1,6 @@
 
 //Vokabular wird auf 5000 verkürzt
-export function buildVocab(tokenGroups, maxVocabSize = 5000) {
+export function buildVocab(tokenGroups, maxVocabSize = 10000) {
     const wordFreq = {};
     tokenGroups.flat().forEach(token => {
         const word = token.toLowerCase();

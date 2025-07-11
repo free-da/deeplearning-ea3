@@ -25,7 +25,7 @@ export class Predictor {
         this.maxLen = maxLen;
     }
 
-    predict(inputText, topK = 5) {
+    async predict(inputText, topK = 5) {
         const tokens = tokenizeText(inputText);
         const tokenIds = tokens.map(t => this.vocab[t] ?? this.vocab['<UNK>']); // Fallback
         const padded = padSequences([tokenIds], this.maxLen); // [1, maxLen]
@@ -34,8 +34,8 @@ export class Predictor {
         console.log("Padded input shape:", padded[0].length);
         console.log("Padded tokens:", padded[0].map(id => this.id2word[id]));
         const prediction = this.model.predict(input);
-        prediction.print();
-        const probs = prediction.dataSync();
+        const probs = await prediction.data(); // statt .dataSync()
+        await tf.nextFrame(); // Lässt den Browser Rendering/Events verarbeiten
 
         // Top-K Wahrscheinlichkeiten
         const sorted = [...probs.entries()]
@@ -52,8 +52,9 @@ export class Predictor {
         tf.dispose([input, prediction]);
         return sorted;
     }
-    predictNextWord(inputText) {
-        const predictions = this.predict(inputText, 1);
+    async predictNextWord(inputText) {
+        const predictions = await this.predict(inputText, 1);
         return predictions.length > 0 ? predictions[0].word : null;
     }
+
 }

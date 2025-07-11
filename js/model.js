@@ -39,7 +39,7 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     }));
 
     model.compile({
-        optimizer: 'adam',
+        optimizer: tf.train.adam(0.0005),
         loss: 'sparseCategoricalCrossentropy',
         metrics: ['accuracy'],
     });

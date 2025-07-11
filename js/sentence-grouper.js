@@ -36,29 +36,38 @@ export class SentenceGrouper {
 
 // Exportiere auch die reine Token-Funktion
 export function groupTokensIntoSentences(tokenList) {
-    const abbreviations = ['i.e.', 'e.g.', 'Mr.', 'Mrs.', 'Dr.', 'etc.'];
+    const abbreviations = new Set([
+        'i.e.', 'e.g.', 'Mr.', 'Mrs.', 'Dr.', 'Prof.', 'vs.', 'etc.', 'Inc.', 'Ltd.'
+    ]);
 
-    function isSentenceEnd(token) {
-        if (!token) return false;
-        if (token.endsWith('.')) {
-            if (token.endsWith('.)') || token.endsWith('.]') || token.endsWith('.}')) return true;
-            if (abbreviations.includes(token)) return false;
-            return true;
-        }
-        return false;
-    }
-
+    const sentenceEndings = new Set(['.', '!', '?', ':', ';']);
     const grouped = [];
     let current = [];
 
-    for (let token of tokenList) {
-        if (token) current.push(token);
-        if (isSentenceEnd(token)) {
+    for (let i = 0; i < tokenList.length; i++) {
+        const token = tokenList[i];
+        if (!token) continue;
+
+        current.push(token);
+
+        const lowerToken = token.toLowerCase();
+
+        // Token ist ein echtes Satzende, kein Punkt in Abkürzung
+        const isEnd = (
+            sentenceEndings.has(token) ||
+            (token.endsWith('.') && !abbreviations.has(lowerToken))
+        );
+
+        if (isEnd) {
             grouped.push(current);
             current = [];
         }
     }
 
-    if (current.length > 0) grouped.push(current);
+    if (current.length > 0) {
+        grouped.push(current);
+    }
+
     return grouped;
 }
+
