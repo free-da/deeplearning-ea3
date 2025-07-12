@@ -15,6 +15,7 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
         inputDim: vocabSize,
         outputDim: embeddingDim,
         inputLength: maxLen,
+        maskZero: true // wichtig bei Padding!
     }));
 
     // Erste LSTM-Schicht: gibt Sequenzen weiter

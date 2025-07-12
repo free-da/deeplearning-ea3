@@ -46,3 +46,19 @@ function padSequenceToMaxLen(seq, maxLen, padValue = 0) {
         return seq;
     }
 }
+
+/**
+ * Entfernt Zitierungen in eckigen Klammern wie [5], [12,13], [6–8] aus den Token-Gruppen.
+ * @param {Array[]} tokenGroups - Array von Sätzen (jeweils Array von Tokens)
+ * @returns {Array[]} Bereinigte Token-Gruppen
+ */
+export function removeCitationsFromTokenGroups(tokenGroups) {
+    const citationRegex = /\[\s*(\d+([–,-]\d+)?(\s*,\s*\d+([–,-]\d+)?)*)\s*\]/g;
+
+    return tokenGroups.map(tokens => {
+        const sentence = tokens.join(' ');
+        const cleaned = sentence.replace(citationRegex, '').trim();
+        const cleanedTokens = cleaned.split(/\s+/).filter(t => t.length > 0);
+        return cleanedTokens;
+    }).filter(group => group.length > 0); // leere Gruppen entfernen
+}

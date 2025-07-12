@@ -1,5 +1,5 @@
 import { tokensToSequences, padSequences } from './tokenizer.js';
-import { prepareLanguageModelData } from './lm-preprocessing.js';
+import { prepareLanguageModelData, removeCitationsFromTokenGroups } from './lm-preprocessing.js';
 import { createLanguageModel } from './model.js';
 
 /**
@@ -26,8 +26,10 @@ export async function trainLanguageModel({
                                          }) {
     console.log("📦 Training mit Parametern:", { maxLen, embeddingDim, lstmUnits, epochs, batchSize });
 
+
     // Schritt 1: Token-Gruppen in Integer-Sequenzen übersetzen
-    const tokenIds = tokensToSequences(tokenGroups, vocab);
+    const cleanedTokenGroups = removeCitationsFromTokenGroups(tokenGroups);
+    const tokenIds = tokensToSequences(cleanedTokenGroups, vocab);
 
     // Schritt 2: Trainingsdaten (X/y) erzeugen
     const { X, y } = prepareLanguageModelData(tokenIds, maxLen, vocab);
@@ -48,14 +50,29 @@ export async function trainLanguageModel({
     console.log(`📊 Anzahl einzigartiger Zielwörter: ${uniqueTargets.size} von ${Object.keys(vocab).length}`);
     console.log(`📊 Gesamtzahl Trainingsbeispiele: ${X.length}`);
 
-    const X_padded = tf.tensor2d(X).slice(0, 50000);
-    const yTensor = tf.tensor1d(y, 'int32').slice(0, 50000);
+    const X_padded = tf.tensor2d(X);
+    const yTensor = tf.tensor1d(y, 'int32');
 
     // Schritt 4: Modell erstellen
     const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
     model.summary();
 
     console.log("X_padded shape:", X_padded.shape); // [Anzahl Samples, maxLen]
+    // Logge 5 zufällige Trainingsbeispiele
+    const id2word = Object.fromEntries(Object.entries(vocab).map(([k, v]) => [v, k]));
+
+    for (let i = 0; i < 5; i++) {
+        const seqIndex = Math.floor(Math.random() * X.length);
+        const inputTokens = X[seqIndex];
+        const targetTokenId = y[seqIndex];
+
+        const inputWords = inputTokens.map(id => id2word[id] || '<UNK>');
+        const targetWord = id2word[targetTokenId] || '<UNK>';
+
+        console.log(`📚 Beispiel ${i + 1}`);
+        console.log("📥 Input:", inputWords.join(' '));
+        console.log("🎯 Target:", targetWord);
+    }
 
     // Schritt 5: Modell trainieren
     await model.fit(X_padded, yTensor, {
@@ -65,7 +82,7 @@ export async function trainLanguageModel({
         callbacks: [
             {
                 onBatchEnd: async (batch, logs) => {
-                    if (batch % 250 === 0) {
+                    if (batch % 25 === 0) {
                         console.log(`🧮 Batch ${batch}: Loss = ${logs.loss.toFixed(4)}`);
                     }
                 },

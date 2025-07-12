@@ -13,7 +13,7 @@ async function main() {
     const maxLen = 30;
     const embeddingDim = 64;
     const lstmUnits = 256;
-    const epochs = 5;
+    const epochs = 100;
     const batchSize = 32;
 
     // Initialisiere Klassen
@@ -52,7 +52,7 @@ async function main() {
 
     // Training-Button
     document.getElementById('train-btn').addEventListener('click', async () => {
-        const subset = tokenGroups; // Trainingsdaten
+        const subset = tokenGroups.slice(0, 1000); // Trainingsdaten
         //.slice(0, 5000)
         // ⏬ Training starten mit konsistenten Parametern
         const trainedModel = await trainLanguageModel({
