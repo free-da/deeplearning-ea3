@@ -41,7 +41,7 @@ export class SentenceGrouper {
         let current = [];
 
         for (let i = 0; i < tokenItems.length; i++) {
-            const token = tokenItems[i].token;
+            const token = tokenItems[i];
             current.push(tokenItems[i]);
 
             const nextToken = (i + 1 < tokenItems.length) ? tokenItems[i + 1].token : null;

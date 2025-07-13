@@ -1,22 +1,32 @@
-
-//Vokabular wird auf 5000 verkürzt
-export function buildVocab(tokenGroups, maxVocabSize = 1000) {
-    const wordFreq = {};
+// Vokabular wird auf 5000 verkürzt und um <PAD> und <UNK> erweitert
+export function buildVocab(tokenGroups, minFrequency = 2, maxVocabSize = 5000) {
+    const freqMap = {};
     tokenGroups.flat().forEach(token => {
-        const word = token.toLowerCase();
-        wordFreq[word] = (wordFreq[word] || 0) + 1;
+        const t = token.toLowerCase();
+        freqMap[t] = (freqMap[t] || 0) + 1;
     });
 
-    const sortedWords = Object.entries(wordFreq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, maxVocabSize - 2) // Platz für <PAD> und <UNK>
+    // Filter Tokens nach minFrequency
+    const sorted = Object.entries(freqMap)
+        .filter(([_, count]) => count >= minFrequency)
+        .sort((a, b) => b[1] - a[1]);
 
-    const wordToId = { '<PAD>': 0, '<UNK>': 1 };
-    sortedWords.forEach(([word], idx) => {
-        wordToId[word] = idx + 2;
+    // Begrenzung auf maxVocabSize minus 2 (für <PAD> und <UNK>)
+    const trimmed = sorted.slice(0, maxVocabSize - 2);
+
+    // Vokabular mit <PAD> und <UNK> starten
+    const vocab = {
+        '<PAD>': 0,
+        '<UNK>': 1,
+    };
+
+    // Restliche Tokens ab ID 2 zuweisen
+    trimmed.forEach(([token], index) => {
+        // <PAD> und <UNK> sind schon vergeben, also index + 2
+        vocab[token] = index + 2;
     });
 
-    return wordToId;
+    return vocab;
 }
 
 export function tokensToSequences(tokenGroups, wordToId) {

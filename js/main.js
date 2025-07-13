@@ -6,38 +6,40 @@ import { buildVocab } from './tokenizer.js';
 import { trainLanguageModel } from './trainer.js';
 import { loadTrainedModel } from './loadModel.js';
 import { Predictor } from './predictor.js';
-import {preprocessTestData} from "./testdata-preprocessor.js";
-import {prepareLanguageModelData} from "./lm-preprocessing.js";
 
 async function main() {
-
     // 💡 Zentrale Parameterdefinition
     const maxLen = 20;
-    const embeddingDim = 64;
-    const lstmUnits = 256;
+    const embeddingDim = 32;
+    const lstmUnits = 128;
     const epochs = 60;
     const batchSize = 64;
+    const sampleCount = 600;
 
     // Initialisiere Klassen
     const loader = new DataLoader();
     const grouper = new SentenceGrouper();
 
-    // Lade Daten
+    // Lade Trainings- und Testdaten
     const { trainData } = await loader.loadAll();
     const { testData } = await loader.loadAll();
 
-    // Gruppiere Tokens zu Sätzen
-    const tokenGroups = groupTokensIntoSentences(trainData.map(d => d.token));
-    analyzeSentenceLengths(tokenGroups);
-    console.log("Token-Gruppen (Sätze):", tokenGroups.slice(0, 3));
+    // Gruppiere Tokens zu Sätzen (Train & Test)
+    const fullTrainTokenGroups = groupTokensIntoSentences(trainData.map(d => d.token));
+
+    analyzeSentenceLengths(fullTrainTokenGroups);
+    console.log("Token-Gruppen (Train-Sätze):", fullTrainTokenGroups.slice(0, 3));
 
     // Vokabular aufbauen
-    const vocab = buildVocab(tokenGroups);
-    const unkCount = Object.entries(vocab).filter(([word, id]) => id === vocab["<UNK>"]).length;
+    const trainTokenGroups = fullTrainTokenGroups.slice(0, sampleCount);
+    const vocab = buildVocab(trainTokenGroups, 1, 2000); // Vokab auf Sample aufbauen
     console.log("Vokabulargröße:", Object.keys(vocab).length);
-    console.log("UNK-Zuweisungen im Vokabular:", unkCount);
+    // const filteredTrainTokenGroups = filterToKnownTokens(trainTokenGroups, vocab);
+    const testTokenGroups = groupTokensIntoSentences(testData.map(d => d.token));
+    // const filteredTestTokenGroups = filterToKnownTokens(testTokenGroups, vocab).slice(0, sampleCount);
 
-    // ⏬ Versuche, ein bereits trainiertes Modell zu laden
+
+    // ⏬ Vortrainiertes Modell laden (optional)
     let model;
     try {
         model = await loadTrainedModel('trained-lm.json');
@@ -46,26 +48,20 @@ async function main() {
         console.warn("⚠️ Kein gespeichertes Modell gefunden. Du kannst eines trainieren.");
     }
 
-    // Predictor instanziieren (ggf. mit Dummy-Modell – später ersetzt)
+    // Predictor initialisieren
     const predictor = new Predictor(model, vocab, maxLen);
 
     // UI initialisieren
     const ui = new UIHandler(predictor);
     ui.init();
-    const valData = preprocessTestData(testData, vocab, maxLen);  // statt testData & wordToId
-    // Schritt 3.5: Validation-Daten vorbereiten
-    const { X: valX, y: valY } = prepareLanguageModelData(valData, maxLen, vocab);
+
     // Training-Button
     document.getElementById('train-btn').addEventListener('click', async () => {
-        // const subset = tokenGroups.slice(0, 100); // Trainingsdaten
-        //.slice(0, 5000)
-        // Annahme: valX, valY sind Arrays (oder Array-ähnlich, z.B. tf.Tensor oder Array von Arrays)
-        const sampleCount = 300;  // oder gleich der Länge des Trainingssets
 
-        // ⏬ Training starten mit konsistenten Parametern
+        // ⏬ Training starten (Trainer kümmert sich jetzt um das Preprocessing!)
         const trainedModel = await trainLanguageModel({
-            tokenGroups: tokenGroups.slice(0, sampleCount),
-            valData: { X: valX.slice(0, sampleCount), y: valY.slice(0, sampleCount) },
+            tokenGroups: trainTokenGroups,
+            valTokenGroups: testTokenGroups, // <== NEU: Raw Val-Gruppen übergeben
             vocab,
             maxLen,
             embeddingDim,
@@ -76,7 +72,6 @@ async function main() {
 
         // Predictor aktualisieren
         predictor.setModel(trainedModel, vocab, maxLen);
-
         console.log("✅ Modelltraining abgeschlossen. Du kannst jetzt Texteingaben machen.");
     });
 }
@@ -97,5 +92,12 @@ function analyzeSentenceLengths(tokenGroups) {
     console.log(`➡️ > 50 Tokens: ${longCount} Sätze`);
 }
 
-
 main();
+
+function filterToKnownTokens(tokenGroups, vocab) {
+    return tokenGroups
+        .map(tokens => tokens.filter(token => vocab.hasOwnProperty(token)))
+        .filter(tokens => tokens.length > 1); // Nur sinnvolle Sequenzen behalten
+}
+
+

@@ -1,24 +1,10 @@
-import { tokensToSequences, padSequences } from './tokenizer.js';
-import { prepareLanguageModelData, removeCitationsFromTokenGroups } from './lm-preprocessing.js';
-import { createLanguageModel } from './model.js';
 
-/**
- * Trainiert ein Sprachmodell (Next Word Prediction)
- *
- * @param {Array[]} tokenGroups - Array von Sätzen mit Tokens
- * @param valData
- * @param {Object} vocab - Token->ID-Vokabular (sollte <PAD>=0, <UNK>=1 enthalten)
- * @param {number} maxLen - Maximale Eingabesequenzlänge
- * @param {number} embeddingDim - Dimension der Embeddings
- * @param {number} lstmUnits - Anzahl LSTM-Einheiten
- * @param {number} epochs - Anzahl der Trainings-Epochen
- * @param {number} batchSize - Größe eines Batches
- * @returns {tf.LayersModel} Das trainierte Modell
- */
+import { LMPreprocessor } from './lm-preprocessing.js'; // neue Klasse importieren
+import { createLanguageModel } from './model.js';
 
 export async function trainLanguageModel({
                                              tokenGroups,
-                                             valData, // <== NEU: Dev-/Testdaten
+                                             valTokenGroups, // Dev-/Testdaten, erwartet {X, y} als Arrays
                                              vocab,
                                              maxLen,
                                              embeddingDim,
@@ -28,14 +14,13 @@ export async function trainLanguageModel({
                                          }) {
     console.log("📦 Training mit Parametern:", { maxLen, embeddingDim, lstmUnits, epochs, batchSize });
 
+    // Preprocessor initialisieren
+    const preprocessor = new LMPreprocessor(vocab, maxLen);
+console.log(tokenGroups);
+    // Trainingsdaten vorverarbeiten
+    const { X, y } = preprocessor.preprocessData(tokenGroups);
 
-    // Schritt 1: Token-Gruppen in Integer-Sequenzen übersetzen
-    const cleanedTokenGroups = removeCitationsFromTokenGroups(tokenGroups);
-    const tokenIds = tokensToSequences(cleanedTokenGroups, vocab);
-
-    // Schritt 2: Trainingsdaten (X/y) erzeugen
-    const { X, y } = prepareLanguageModelData(tokenIds, maxLen, vocab);
-    // === Analyse-Logs zum Training ===
+    // Analyse-Logs zum Training
     const UNK_ID = vocab['<UNK>'];
     let totalUnks = 0;
     let totalTokens = 0;
@@ -52,17 +37,26 @@ export async function trainLanguageModel({
     console.log(`📊 Anzahl einzigartiger Zielwörter: ${uniqueTargets.size} von ${Object.keys(vocab).length}`);
     console.log(`📊 Gesamtzahl Trainingsbeispiele: ${X.length}`);
 
+    console.log('X:', X);
+    console.log('X[0]:', X[0]);
+    console.log('X ist Array?', Array.isArray(X));
+    console.log('X[0] ist Array?', Array.isArray(X[0]));
+
+    // Tensoren erstellen
     const X_padded = tf.tensor2d(X);
     const yTensor = tf.tensor1d(y, 'int32');
 
-    // Schritt 4: Modell erstellen
+    // 🧪 Validation-Preprocessing
+    const { X: valX, y: valY } = preprocessor.preprocessData(valTokenGroups);
+
+    // Modell erstellen
     const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
     model.summary();
 
-    console.log("X_padded shape:", X_padded.shape); // [Anzahl Samples, maxLen]
-    // Logge 5 zufällige Trainingsbeispiele
+    console.log("X_padded shape:", X_padded.shape);
     const id2word = Object.fromEntries(Object.entries(vocab).map(([k, v]) => [v, k]));
 
+    // 5 zufällige Trainingsbeispiele loggen
     for (let i = 0; i < 5; i++) {
         const seqIndex = Math.floor(Math.random() * X.length);
         const inputTokens = X[seqIndex];
@@ -75,23 +69,20 @@ export async function trainLanguageModel({
         console.log("📥 Input:", inputWords.join(' '));
         console.log("🎯 Target:", targetWord);
     }
+
     const metrics = [];
 
-    // Schritt 5: Modell trainieren
+    // Modell trainieren
     await model.fit(X_padded, yTensor, {
         epochs,
         batchSize,
         shuffle: true,
         validationData: [
-            tf.tensor2d(valData.X), // oder valData.X, falls schon tf.Tensor2d
-            tf.tensor1d(valData.y)  // oder valData.y, falls schon tf.Tensor1d
-        ],        callbacks: [
+            tf.tensor2d(valX),
+            tf.tensor1d(valY, 'int32')
+        ],
+        callbacks: [
             {
-                // onBatchEnd: async (batch, logs) => {
-                //     if (batch % 25 === 0) {
-                //         console.log(`🧮 Batch ${batch}: Loss = ${logs.loss.toFixed(4)}`);
-                //     }
-                // },
                 onEpochEnd: async (epoch, logs) => {
                     console.log(`📈 Epoch ${epoch + 1}:`);
                     console.log(`   🔹 Training Loss = ${logs.loss.toFixed(4)}`);
@@ -99,7 +90,6 @@ export async function trainLanguageModel({
                         console.log(`   🔸 Validation Loss = ${logs.val_loss.toFixed(4)}`);
                     }
 
-                    // 👉 tfvis-Daten aktualisieren
                     metrics.push({
                         epoch,
                         loss: logs.loss,
@@ -123,22 +113,18 @@ export async function trainLanguageModel({
                         }
                     );
 
-                    // ✅ Checkpoint speichern
                     if ((epoch + 1) % 2 === 0) {
                         await model.save('indexeddb://checkpoint');
                         console.log(`💾 Modell-Checkpoint gespeichert (Epoch ${epoch + 1})`);
                     }
                 }
-
             },
             new EarlyStopping(3)
         ]
     });
 
-    await tf.nextFrame(); // Lässt den Browser „atmen“, reduziert Sync-Probleme
+    await tf.nextFrame();
 
-
-    // Optional: Modell speichern
     await model.save('downloads://trained-lm');
     console.log("✅ Modell gespeichert");
 
