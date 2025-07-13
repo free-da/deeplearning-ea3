@@ -22,6 +22,8 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     model.add(tf.layers.lstm({
         units: lstmUnits,
         returnSequences: true,
+        dropout: 0.2,           // Dropout auf Inputs der LSTM-Zellen
+        recurrentDropout: 0.2,  // Dropout auf rekurrente Verbindungen
         kernelInitializer: 'glorotUniform',
         recurrentInitializer: 'glorotUniform',
     }));
@@ -30,6 +32,8 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     model.add(tf.layers.lstm({
         units: lstmUnits,
         returnSequences: false,
+        dropout: 0.2,           // Dropout auf Inputs der LSTM-Zellen
+        recurrentDropout: 0.2,  // Dropout auf rekurrente Verbindungens
         kernelInitializer: 'glorotUniform',
         recurrentInitializer: 'glorotUniform',
     }));
@@ -40,7 +44,7 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     }));
 
     model.compile({
-        optimizer: tf.train.adam(0.0005),
+        optimizer: tf.train.adam(0.0001),
         loss: 'sparseCategoricalCrossentropy',
         metrics: ['accuracy'],
     });

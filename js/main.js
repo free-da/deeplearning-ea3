@@ -6,15 +6,17 @@ import { buildVocab } from './tokenizer.js';
 import { trainLanguageModel } from './trainer.js';
 import { loadTrainedModel } from './loadModel.js';
 import { Predictor } from './predictor.js';
+import {preprocessTestData} from "./testdata-preprocessor.js";
+import {prepareLanguageModelData} from "./lm-preprocessing.js";
 
 async function main() {
 
     // 💡 Zentrale Parameterdefinition
-    const maxLen = 30;
+    const maxLen = 20;
     const embeddingDim = 64;
     const lstmUnits = 256;
-    const epochs = 100;
-    const batchSize = 32;
+    const epochs = 60;
+    const batchSize = 64;
 
     // Initialisiere Klassen
     const loader = new DataLoader();
@@ -22,6 +24,7 @@ async function main() {
 
     // Lade Daten
     const { trainData } = await loader.loadAll();
+    const { testData } = await loader.loadAll();
 
     // Gruppiere Tokens zu Sätzen
     const tokenGroups = groupTokensIntoSentences(trainData.map(d => d.token));
@@ -49,14 +52,20 @@ async function main() {
     // UI initialisieren
     const ui = new UIHandler(predictor);
     ui.init();
-
+    const valData = preprocessTestData(testData, vocab, maxLen);  // statt testData & wordToId
+    // Schritt 3.5: Validation-Daten vorbereiten
+    const { X: valX, y: valY } = prepareLanguageModelData(valData, maxLen, vocab);
     // Training-Button
     document.getElementById('train-btn').addEventListener('click', async () => {
-        const subset = tokenGroups.slice(0, 1000); // Trainingsdaten
+        // const subset = tokenGroups.slice(0, 100); // Trainingsdaten
         //.slice(0, 5000)
+        // Annahme: valX, valY sind Arrays (oder Array-ähnlich, z.B. tf.Tensor oder Array von Arrays)
+        const sampleCount = 300;  // oder gleich der Länge des Trainingssets
+
         // ⏬ Training starten mit konsistenten Parametern
         const trainedModel = await trainLanguageModel({
-            tokenGroups: subset,
+            tokenGroups: tokenGroups.slice(0, sampleCount),
+            valData: { X: valX.slice(0, sampleCount), y: valY.slice(0, sampleCount) },
             vocab,
             maxLen,
             embeddingDim,
