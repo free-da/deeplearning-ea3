@@ -66,6 +66,50 @@
         </div>
     </div>
 
+    <h2>Diskussion</h2>
+    <div class="callout secondary">
+        <p>
+            - sorgfältigeres Data-Preprocessing: Sätze nach allen bekannten Satzzeichen filtern, Abkürzungen nicht als Satzzeichen erkennen, nur Tokens verwenden, die mind. 2x vorkommen, Sätze/Token-Groups von mind. 8 Tokens (für Kontext)
+            - erst mit kleinem Wortschatz (100 Sätze) die Parameter ausprobiert. Als dort ein zuverlässiger Lernfortschritt erkennbar war, mehr Daten dazu genommen
+            - Trainingssätze mit Vokabular gefiltert (sowohl für Train als auch Test): da Trainingssätze gesamplet sind, immer abprüfen, ob Tokens im Vokabular enthalten sind, um Anteil von UNKNOWN-Tokens zu reduzieren
+            - Checkpointing: nach jeder Epoche überprüfe ich, ob der Train- UND Validierungs-Loss gut zusammen passen und weiterhin sinken. Ich speichere dann nur den besten Checkpoint. Sobald Validierungs-Loss wieder steigt, wird der jeweilige Checkpoint nicht gespeichert. Ich habe außerdem Early Stopping eingebaut, aber das hat bisher noch nie ausgelöst. Ich beobachte den Trainingsfortschritt natürlich auch anhand von Logs und visuell über tfvisor.
+            - Modell weiter trainieren: bisher habe ich immer mit dem Training von neuem begonnen. Als ich so langsam den Dreh raus hatte, hatte ich wie oben erläutert das Training abgebrochen, sobald der Validierungsloss wieder nach oben gedriftet ist, aber das Modell an diesem Punkt gespeichert und mit geänderten Parametern neu geladen, um es weiter zu trainieren. So kann man inkrementell trainieren auch überprüfen.
+            - Ich habe erst mit 1000 Trainingssätzen über ca. 18 Epochen trainiert,
+            dann 10000 über 10 Epochen, dann 15000 Trainingssätzen und einem Vokabular von 8000 für 18 Epochen.
+            next: 30 000 Trainingssätze/10 000 Vokab, 20 Epochen
+            Auf die Weise habe ich meinen Loss erstmals unter 4 bekommen und Trainings- und Validierungsloss sinken gemeinsam. Wenn der stagniert oder auseinanderdriftet, stoppe ich das Training und setze es mit mehr Daten fort.
+        </p>
+    </div>
+
+    <h2>Dokumentation</h2>
+    <div class="grid-x grid-padding-x">
+        <div class="cell medium-6">
+            <div class="callout primary">
+                <h4>Technisch</h4>
+                <ul>
+                    <li><strong>Foundation Sites:</strong> Für das responsive Grid-Layout und UI-Komponenten.</li>
+                    <li><strong>TensorFlow.js:</strong> Für das Training und die Ausführung neuronaler Netze direkt im Browser.</li>
+                    <li><strong>Chart.js:</strong> Zur grafischen Darstellung der Trainings- und Testergebnisse.</li>
+                    <li><strong>tfjs-vis:</strong> Ergänzendes Tool zur Visualisierung von TensorFlow-Modellen.</li>
+                </ul>
+                <p>Besonderheit: Die Modelle werden vollständig clientseitig trainiert und können interaktiv gespeichert werden. Es ist kein Backend erforderlich.</p>
+            </div>
+        </div>
+
+        <div class="cell medium-6">
+            <div class="callout success">
+                <h4>Fachlich</h4>
+                <p>Es wurden drei Modelle zur Regressionsvorhersage implementiert:</p>
+                <ul>
+                    <li><strong>y_unverrauscht(x):</strong> Vorhersage eines sauberen Datensatzes (Benchmark-Modell).</li>
+                    <li><strong>y_best(x):</strong> Bestmöglich generalisiertes Modell auf verrauschtem Datensatz.</li>
+                    <li><strong>y_overfit(x):</strong> Modell mit zu hoher Komplexität, das Overfitting demonstriert.</li>
+                </ul>
+                <p>Die Implementierung folgt einem didaktischen Ansatz zur Veranschaulichung des Overfitting-Problems bei neuronalen Netzen. Alle Daten werden zufällig generiert oder als Datei geladen.</p>
+            </div>
+        </div>
+    </div>
+
     <div class="row column">
         <hr>
         <ul class="menu"><li class="float-right">© F. Buchner 2025</li></ul>

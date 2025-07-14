@@ -14,7 +14,7 @@ async function main() {
     const lstmUnits = 128;
     const epochs = 20;
     const batchSize = 64;
-    const sampleCount = 15000;
+    const sampleCount = 30000;
 
     // Initialisiere Klassen
     const loader = new DataLoader();
@@ -32,7 +32,7 @@ async function main() {
 
     // Vokabular aufbauen
     const trainTokenGroups = fullTrainTokenGroups.slice(0, sampleCount);
-    const vocab = buildVocab(trainTokenGroups, 1, 8000); // Vokab auf Sample aufbauen
+    const vocab = buildVocab(trainTokenGroups, 1, 10000); // Vokab auf Sample aufbauen
     console.log("Vokabulargröße:", Object.keys(vocab).length);
     const filteredTrainTokenGroups = filterToKnownTokens(trainTokenGroups, vocab);
     const testTokenGroups = groupTokensIntoSentences(testData.map(d => d.token));
