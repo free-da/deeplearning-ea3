@@ -1,6 +1,6 @@
 
 import { LMPreprocessor } from './lm-preprocessing.js'; // neue Klasse importieren
-import { createLanguageModel } from './model.js';
+import {createLanguageModel, loadOrCreateModel} from './model.js';
 
 export async function trainLanguageModel({
                                              tokenGroups,
@@ -16,7 +16,6 @@ export async function trainLanguageModel({
 
     // Preprocessor initialisieren
     const preprocessor = new LMPreprocessor(vocab, maxLen);
-console.log(tokenGroups);
     // Trainingsdaten vorverarbeiten
     const { X, y } = preprocessor.preprocessData(tokenGroups);
 
@@ -50,7 +49,9 @@ console.log(tokenGroups);
     const { X: valX, y: valY } = preprocessor.preprocessData(valTokenGroups);
 
     // Modell erstellen
-    const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
+    // const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
+
+    const model = await loadOrCreateModel('./trained-lm.json');
     model.summary();
 
     console.log("X_padded shape:", X_padded.shape);
@@ -73,6 +74,8 @@ console.log(tokenGroups);
     const metrics = [];
 
     // Modell trainieren
+    let bestValLoss = Infinity;
+
     await model.fit(X_padded, yTensor, {
         epochs,
         batchSize,
@@ -113,15 +116,17 @@ console.log(tokenGroups);
                         }
                     );
 
-                    if ((epoch + 1) % 2 === 0) {
-                        await model.save('indexeddb://checkpoint');
-                        console.log(`💾 Modell-Checkpoint gespeichert (Epoch ${epoch + 1})`);
+                    if (logs.val_loss !== undefined && logs.val_loss < bestValLoss - 1e-4) {
+                        bestValLoss = logs.val_loss;
+                        await model.save('indexeddb://best-checkpoint');
+                        console.log(`💾 Neuer bester Checkpoint gespeichert (Epoch ${epoch + 1})`);
                     }
                 }
             },
             new EarlyStopping(3)
         ]
     });
+
 
     await tf.nextFrame();
 

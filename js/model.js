@@ -44,10 +44,30 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     }));
 
     model.compile({
-        optimizer: tf.train.adam(0.0001),
+        optimizer: tf.train.adam(0.001),
         loss: 'sparseCategoricalCrossentropy',
         metrics: ['accuracy'],
     });
 
     return model;
+}
+
+export async function loadOrCreateModel(modelPath) {
+    let model;
+    if (modelPath) {
+        // Modell vom Pfad laden
+        model = await tf.loadLayersModel(modelPath);
+        console.log('✅ Modell geladen von:', modelPath);
+    } else {
+        // Neues Modell erstellen
+        model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
+        console.log('✅ Neues Modell erstellt');
+    }
+    model.compile({
+        optimizer: tf.train.adam(0.001),
+        loss: 'sparseCategoricalCrossentropy',
+        metrics: ['accuracy']
+    });
+
+    return model;  // <=== unbedingt zurückgeben
 }

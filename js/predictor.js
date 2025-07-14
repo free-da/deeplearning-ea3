@@ -54,6 +54,7 @@ export class Predictor {
     }
     async predictNextWord(inputText) {
         const predictions = await this.predict(inputText, 1);
+        console.log(predictions);
         return predictions.length > 0 ? predictions[0].word : null;
     }
 

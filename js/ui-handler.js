@@ -9,6 +9,7 @@ export class UIHandler {
     init() {
         document.getElementById("predict-btn").addEventListener("click", async () => {
             const input = document.getElementById("user-input").value.trim();
+            console.log(input);
             if (input) {
                 this.currentText = input;
                 this.updateCurrentText();
@@ -17,9 +18,9 @@ export class UIHandler {
         });
 
         document.getElementById("weiter-btn").addEventListener("click", async () => {
-            const predictions = await this.predictor.predictNextWord(this.currentText.trim());
-            if (predictions.length > 0) {
-                this.appendWord(predictions[0]);
+            const nextWord = await this.predictor.predictNextWord(this.currentText.trim());
+            if (nextWord) {
+                this.appendWord(nextWord);
                 await this.triggerPrediction();
             }
         });

@@ -1,7 +1,7 @@
 import { SentenceGrouper } from './sentence-grouper.js';
 
 export class LMPreprocessor {
-    constructor(vocab, maxLen, minRealTokens = 5) {
+    constructor(vocab, maxLen, minRealTokens = 8) {
         this.vocab = vocab;
         this.maxLen = maxLen;
         this.minRealTokens = minRealTokens;
@@ -44,10 +44,6 @@ export class LMPreprocessor {
         const sequences = cleanedGroups.map(tokens =>
             tokens.map(t => this.vocab[t] !== undefined ? this.vocab[t] : this.UNK_ID)
         );
-        console.log("Sequences:", sequences);
-        console.log("UNK_ID:", this.UNK_ID, "PAD_ID:", this.PAD_ID, "minRealTokens:", this.minRealTokens);
-        console.log('Input token groups:', tokenGroups);
-
         // 3. Padding
         return sequences.map(seq => this.padSequenceToMaxLen(seq));
     }
@@ -121,12 +117,9 @@ export class LMPreprocessor {
         // tokenGroups: Array von Sätzen, jeder Satz ist Array von { token: string }
         // 1. Gruppierung direkt auf flachem Array von Token-Objekten
         const flatTokenObjects = tokenGroups.flat();
-        console.log("Flat token Objects:", flatTokenObjects);
 
         // 2. Von gruppierten Token-Objekten zu Arrays von Token-Strings
         const groupedTokens = this.grouper.group(flatTokenObjects);
-
-        console.log("Grouped tokens (vor Padding & IDs):", groupedTokens);
 
         // 3. Jetzt Padding + Umwandlung in IDs + Zitations-Entfernung in tokensToPaddedSequences
         const paddedSequences = this.tokensToPaddedSequences(groupedTokens);
