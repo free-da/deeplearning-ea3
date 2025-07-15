@@ -55,24 +55,24 @@ async function main() {
     ui.init();
 
     // Training-Button
-    document.getElementById('train-btn').addEventListener('click', async () => {
-
-        // ⏬ Training starten (Trainer kümmert sich jetzt um das Preprocessing!)
-        const trainedModel = await trainLanguageModel({
-            tokenGroups: filteredTrainTokenGroups,
-            valTokenGroups: filteredTestTokenGroups, // <== NEU: Raw Val-Gruppen übergeben
-            vocab,
-            maxLen,
-            embeddingDim,
-            lstmUnits,
-            epochs,
-            batchSize,
-        });
-
-        // Predictor aktualisieren
-        predictor.setModel(trainedModel, vocab, maxLen);
-        console.log("✅ Modelltraining abgeschlossen. Du kannst jetzt Texteingaben machen.");
-    });
+    // document.getElementById('train-btn').addEventListener('click', async () => {
+    //
+    //     // ⏬ Training starten (Trainer kümmert sich jetzt um das Preprocessing!)
+    //     const trainedModel = await trainLanguageModel({
+    //         tokenGroups: filteredTrainTokenGroups,
+    //         valTokenGroups: filteredTestTokenGroups, // <== NEU: Raw Val-Gruppen übergeben
+    //         vocab,
+    //         maxLen,
+    //         embeddingDim,
+    //         lstmUnits,
+    //         epochs,
+    //         batchSize,
+    //     });
+    //
+    //     // Predictor aktualisieren
+    //     predictor.setModel(trainedModel, vocab, maxLen);
+    //     console.log("✅ Modelltraining abgeschlossen. Du kannst jetzt Texteingaben machen.");
+    // });
 }
 
 function analyzeSentenceLengths(tokenGroups) {

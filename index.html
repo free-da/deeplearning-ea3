@@ -68,6 +68,29 @@
 
     <h2>Diskussion</h2>
     <div class="callout secondary">
+        <section>
+            <section>
+                <p>
+                    In diesem Projekt habe ich ein einfaches LSTM-basiertes Sprachmodell mit TensorFlow.js direkt im Browser trainiert. Das Modell besteht aus zwei LSTM-Schichten mit jeweils 128 Einheiten sowie einer Embedding-Schicht mit einer Dimensionalität von 64. Die maximale Eingabelänge war auf 20 Tokens begrenzt und das Training erfolgte über 20 Epochen mit einer Batch-Größe von 32.
+                </p>
+
+                <p>
+                    Für das Training wurden insgesamt 30.000 Beispielsätze verwendet, die zuvor in Eingabesequenzen und Zielwörter unterteilt wurden. Während des Trainings konnte ich beobachten, dass der Trainings- und Validierungs-Loss kontinuierlich sank, was auf eine Verbesserung des Modells hinweist. Trotzdem sind die Vorhersagen, die das Modell trifft, noch relativ ungenau und teilweise wenig sinnvoll.
+                </p>
+                <p>
+                    Auffällig war, dass automatisch generierte Sätze wie <em>"In conclusion the - and is the - terminal domains ."</em> oft grammatikalisch fehlerhaft und teilweise unverständlich waren. Dieses Verhalten lässt sich darauf zurückführen, dass häufig vorkommende Tokens wie <code>"the"</code>, <code>"-"</code> oder <code>"and"</code> eine besonders hohe Wahrscheinlichkeit erhalten und deshalb bevorzugt werden, selbst wenn sie inhaltlich keinen sinnvollen Zusammenhang mehr ergeben.
+                </p>
+
+                <p>
+                    Ich vermute, dass die geringe Genauigkeit vor allem daran liegt, dass das Vokabular zu Beginn sehr klein war und nur schrittweise erweitert wurde. Das führt dazu, dass dem Modell zu wenig semantische Informationen über viele Wörter zur Verfügung standen, besonders bei selteneren Begriffen. Außerdem ist das Modell insgesamt noch recht klein und wurde nicht sehr lange trainiert – größere Modelle mit mehr Daten lernen in der Regel deutlich bessere Sprachrepräsentationen.
+                </p>
+
+                <p>
+                    Für mich war dieses Projekt eine spannende erste Erfahrung mit Sprachmodellen, Deep Learning und dem Umgang mit Tensoren im Browser. Ich habe viel über das Zusammenspiel von Modellarchitektur, Trainingsdaten und der Bedeutung eines konsistenten Vokabulars gelernt.
+                </p>
+            </section>
+
+        </section>
 
     </div>
 
