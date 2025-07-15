@@ -33,9 +33,9 @@ export class UIHandler {
                     clearInterval(this.autoInterval);
                     return;
                 }
-                const predictions = await this.predictor.predictNextWord(this.currentText.trim());
-                if (predictions.length > 0) {
-                    this.appendWord(predictions[0]);
+                const nextWord = await this.predictor.predictNextWord(this.currentText.trim());
+                if (nextWord) {
+                    this.appendWord(nextWord);
                     await this.triggerPrediction();
                 }
                 count++;

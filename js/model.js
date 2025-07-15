@@ -44,7 +44,7 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     }));
 
     model.compile({
-        optimizer: tf.train.adam(0.002),
+        optimizer: tf.train.adam(0.0005),
         loss: 'sparseCategoricalCrossentropy',
         metrics: ['accuracy'],
     });
@@ -52,7 +52,8 @@ export function createLanguageModel(vocabSize, maxLen, embeddingDim, lstmUnits) 
     return model;
 }
 
-export async function loadOrCreateModel(modelPath) {
+export async function loadOrCreateModel() {
+    const modelPath = './trained-lm-30k_2.json';
     let model;
     if (modelPath) {
         // Modell vom Pfad laden
@@ -64,7 +65,7 @@ export async function loadOrCreateModel(modelPath) {
         console.log('✅ Neues Modell erstellt');
     }
     model.compile({
-        optimizer: tf.train.adam(0.001),
+        optimizer: tf.train.adam(0.01),
         loss: 'sparseCategoricalCrossentropy',
         metrics: ['accuracy']
     });

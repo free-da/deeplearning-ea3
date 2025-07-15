@@ -51,7 +51,9 @@ export async function trainLanguageModel({
     // Modell erstellen
     // const model = createLanguageModel(Object.keys(vocab).length, maxLen, embeddingDim, lstmUnits);
 
-    const model = await loadOrCreateModel('./trained-lm.json');
+    const model = await loadOrCreateModel();
+    console.log(model.inputs[0].shape);  // z. B. [null, 20]
+
     model.summary();
 
     console.log("X_padded shape:", X_padded.shape);
@@ -75,19 +77,67 @@ export async function trainLanguageModel({
 
     // Modell trainieren
     let bestValLoss = Infinity;
+    //
+    // await model.fit(X_padded, yTensor, {
+    //     epochs,
+    //     batchSize,
+    //     shuffle: true,
+    //     validationData: [
+    //         tf.tensor2d(valX),
+    //         tf.tensor1d(valY, 'int32')
+    //     ],
+    //
+    // });
+    function generateReadableTimestamp(prefix = "model") {
+        const now = new Date();
 
-    await model.fit(X_padded, yTensor, {
+        const pad = (n) => n.toString().padStart(2, '0');
+
+        const timestamp = [
+            now.getFullYear(),
+            pad(now.getMonth() + 1),
+            pad(now.getDate()),
+            pad(now.getHours()),
+            pad(now.getMinutes()),
+            pad(now.getSeconds())
+        ].join('-');
+
+        return `${prefix}-${timestamp}`;
+    }
+
+    function* trainingDataGenerator() {
+        for (let i = 0; i < X.length; i++) {
+            yield tf.tidy(() => ({
+                xs: tf.tensor1d(X[i], 'int32'),
+                ys: tf.scalar(y[i], 'int32')
+            }));
+        }
+    }
+
+    const trainDataset = tf.data.generator(trainingDataGenerator)
+        .batch(batchSize)
+        .shuffle(1000);
+
+    function* validationDataGenerator() {
+        for (let i = 0; i < valX.length; i++) {
+            yield tf.tidy(() => ({
+                xs: tf.tensor1d(X[i], 'int32'),
+                ys: tf.scalar(y[i], 'int32')
+            }));
+        }
+    }
+
+    const valDataset = tf.data.generator(validationDataGenerator)
+        .batch(batchSize)
+        .prefetch(1);
+
+    await model.fitDataset(trainDataset, {
         epochs,
-        batchSize,
-        shuffle: true,
-        validationData: [
-            tf.tensor2d(valX),
-            tf.tensor1d(valY, 'int32')
-        ],
+        validationData: valDataset,
         callbacks: [
             {
                 onEpochEnd: async (epoch, logs) => {
-                    console.log(`📈 Epoch ${epoch + 1}:`);
+                    console.log(`📈 Epoch ${epoch + 1} (`+ generateReadableTimestamp() + `):`);
                     console.log(`   🔹 Training Loss = ${logs.loss.toFixed(4)}`);
                     if (logs.val_loss !== undefined) {
                         console.log(`   🔸 Validation Loss = ${logs.val_loss.toFixed(4)}`);
@@ -132,6 +182,11 @@ export async function trainLanguageModel({
 
     await model.save('downloads://trained-lm');
     console.log("✅ Modell gespeichert");
+    // Am Ende des Trainings
+    X_padded.dispose();
+    yTensor.dispose();
+// Optional: valX/valY als Tensoren auch entsorgen, wenn du sie als Tensor2D erzeugt hast
+
 
     return model;
 }

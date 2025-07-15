@@ -4,7 +4,7 @@
  * @param {string} path - Pfad zur .json Datei
  * @returns {tf.LayersModel}
  */
-export async function loadTrainedModel(path = './trained-lm') {
+export async function loadTrainedModel(path = './trained-lm-30k_2.json') {
     const model = await tf.loadLayersModel(path);
     console.log("✅ Modell geladen");
     // await model.save('downloads://' + generateFilename());

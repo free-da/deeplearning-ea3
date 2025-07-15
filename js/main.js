@@ -10,15 +10,14 @@ import { Predictor } from './predictor.js';
 async function main() {
     // 💡 Zentrale Parameterdefinition
     const maxLen = 20;
-    const embeddingDim = 128;
+    const embeddingDim = 64;
     const lstmUnits = 128;
     const epochs = 20;
-    const batchSize = 64;
+    const batchSize = 32;
     const sampleCount = 30000;
 
     // Initialisiere Klassen
     const loader = new DataLoader();
-    const grouper = new SentenceGrouper();
 
     // Lade Trainings- und Testdaten
     const { trainData } = await loader.loadAll();
@@ -42,7 +41,7 @@ async function main() {
     // ⏬ Vortrainiertes Modell laden (optional)
     let model;
     try {
-        model = await loadTrainedModel('trained-lm.json');
+        model = await loadTrainedModel();
         console.log("✅ Vortrainiertes Modell geladen.");
     } catch (e) {
         console.warn("⚠️ Kein gespeichertes Modell gefunden. Du kannst eines trainieren.");
